@@ -13,6 +13,20 @@ export default {
 
     const url = new URL(request.url);
 
+if (request.method === "POST" && url.pathname === "/findings") {
+
+  const data = await request.json();
+
+  await env.DB.prepare(
+    "INSERT INTO findings (title, severity, source, status, age_days) VALUES (?, ?, ?, ?, ?)"
+  )
+  .bind(data.title, data.severity, data.source, "Open", 0)
+  .run();
+
+  return Response.json({ message: "Finding created" });
+}
+
+
     if (url.pathname === "/findings") {
 
       const { results } = await env.DB.prepare(
@@ -78,6 +92,97 @@ results.forEach(f => {
 
   <div style="background:#854d0e; padding:15px; border-radius:6px;">
     Medium: ${medium}
+  </div>
+
+  <div style="background:#14532d; padding:15px; border-radius:6px;">
+    Low: ${low}
+  </div>
+
+</div>
+      <style>
+        body {
+          font-family: Arial;
+          background:#0f172a;
+          color:white;
+          padding:40px;
+        }
+        h1 {
+          margin-bottom:20px;
+        }
+        table {
+          border-collapse: collapse;
+          width:100%;
+          background:#1e293b;
+        }
+        th, td {
+          padding:12px;
+          border-bottom:1px solid #334155;
+        }
+        th {
+          text-align:left;
+          background:#020617;
+        }
+        tr:hover {
+          background:#334155;
+        }
+      </style>
+    </head>
+
+    <body>
+
+      <h1>Security Assurance Dashboard</h1>
+
+      <button onclick="addTestFinding()" style="margin-bottom:20px;padding:10px 15px;background:#2563eb;color:white;border:none;border-radius:5px;cursor:pointer;">
+Add Test Finding
+</button>
+
+      <table>
+        <thead>
+          <tr>
+            <th>Finding</th>
+            <th>Severity</th>
+            <th>Source</th>
+            <th>Status</th>
+            <th>Age (days)</th>
+          </tr>
+        </thead>
+
+        <tbody>
+          ${rows}
+        </tbody>
+
+      </table>
+
+    
+    <script>
+async function addTestFinding() {
+
+  await fetch("/findings", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json"
+    },
+    body: JSON.stringify({
+      title: "Manual test finding",
+      severity: "Medium",
+      source: "Dashboard"
+    })
+  });
+
+  location.reload();
+}
+</script>
+
+      </body>
+    </html>
+    `;
+
+    return new Response(html, {
+      headers: { "content-type": "text/html" }
+    });
+
+  },
+};    Medium: ${medium}
   </div>
 
   <div style="background:#14532d; padding:15px; border-radius:6px;">
