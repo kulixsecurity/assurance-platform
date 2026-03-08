@@ -1,3 +1,13 @@
+/**
+ * Welcome to Cloudflare Workers! This is your first worker.
+ *
+ * - Run "npm run dev" in your terminal to start a development server
+ * - Open a browser tab at http://localhost:8787/ to see your worker in action
+ * - Run "npm run deploy" to publish your worker
+ *
+ * Learn more at https://developers.cloudflare.com/workers/
+ */
+
 export default {
   async fetch(request, env) {
 
@@ -21,20 +31,60 @@ export default {
       "SELECT title, severity, source, status, age_days FROM findings ORDER BY age_days DESC"
     ).all();
 
-    const rows = results.map(f => `
-      <tr>
-        <td>${f.title}</td>
-        <td>${f.severity}</td>
-        <td>${f.source}</td>
-        <td>${f.status}</td>
-        <td>${f.age_days}</td>
-      </tr>
-    `).join("");
+    let critical = 0;
+let high = 0;
+let medium = 0;
+let low = 0;
+
+results.forEach(f => {
+  if (f.severity === "Critical") critical++;
+  if (f.severity === "High") high++;
+  if (f.severity === "Medium") medium++;
+  if (f.severity === "Low") low++;
+});
+
+    const rows = results.map(f => {
+  let color = "#64748b";
+
+  if (f.severity === "Critical") color = "#ef4444";
+  if (f.severity === "High") color = "#f97316";
+  if (f.severity === "Medium") color = "#eab308";
+  if (f.severity === "Low") color = "#22c55e";
+
+  return `
+    <tr>
+      <td>${f.title}</td>
+      <td><span style="color:${color}; font-weight:bold">${f.severity}</span></td>
+      <td>${f.source}</td>
+      <td>${f.status}</td>
+      <td>${f.age_days}</td>
+    </tr>
+  `;
+}).join("");
 
     const html = `
     <html>
     <head>
       <title>Security Assurance Dashboard</title>
+      <div style="display:flex; gap:20px; margin-bottom:30px;">
+
+  <div style="background:#7f1d1d; padding:15px; border-radius:6px;">
+    Critical: ${critical}
+  </div>
+
+  <div style="background:#9a3412; padding:15px; border-radius:6px;">
+    High: ${high}
+  </div>
+
+  <div style="background:#854d0e; padding:15px; border-radius:6px;">
+    Medium: ${medium}
+  </div>
+
+  <div style="background:#14532d; padding:15px; border-radius:6px;">
+    Low: ${low}
+  </div>
+
+</div>
       <style>
         body {
           font-family: Arial;
